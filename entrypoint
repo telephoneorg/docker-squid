@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+app=squid
+user=$app
+
+: ${SQUID_LOG_LEVEL:=1}
+
+
+echo "Ensuring permissions ..."
+chown -R $user:$user /var/cache/squid
+chown -R $user:$user /var/log/squid
+
+
+echo "Initializing cache..."
+gosu $user squid -z
+
+
+echo "Tail log files ..."
+tail -f /var/log/squid/* &
+
+sleep 5
+
+echo "Starting $app ..."
+exec gosu $user squid -NYC -d $SQUID_LOG_LEVEL
